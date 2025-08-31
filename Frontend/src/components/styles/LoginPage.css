@@ -1,0 +1,185 @@
+/* LoginPage.css */
+.login-page-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  min-height: 100vh;
+  overflow: hidden;
+  z-index: 0;
+}
+
+/* Video background styling */
+.login-page-container .video-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: -1;
+}
+
+.login-page-container .background-video {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  min-width: 100%;
+  min-height: 100%;
+  width: auto;
+  height: auto;
+  transform: translateX(-50%) translateY(-50%);
+  object-fit: cover;
+}
+
+.login-page-container .video-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5); /* Dark overlay for better text contrast */
+  z-index: 1;
+}
+
+/* Glass card styling - enhanced transparency */
+.login-page-container .glass-card {
+  background: rgba(255, 255, 255, 0.15) !important;
+  backdrop-filter: blur(15px) saturate(180%);
+  -webkit-backdrop-filter: blur(15px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  z-index: 2;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.login-page-container .glass-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* Form element styling for better visibility */
+.login-page-container .input-group-text {
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+.login-page-container .form-control {
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  color: white !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+.login-page-container .form-control:focus {
+  box-shadow: 0 0 0 0.25rem rgba(255, 255, 255, 0.25) !important;
+  border-color: rgba(255, 255, 255, 0.6) !important;
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: white !important;
+}
+
+.login-page-container .form-control::placeholder {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.login-page-container .btn-primary {
+  background: rgba(255, 103, 0, 0.9) !important;
+  border: none !important;
+  transition: all 0.3s ease !important;
+}
+
+.login-page-container .btn-primary:hover {
+  background: rgba(255, 103, 0, 1) !important;
+  transform: translateY(-2px);
+}
+
+/* Animated particles - adjusted for video background */
+.login-page-container .particles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.login-page-container .particle {
+  position: absolute;
+  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  animation: float 15s infinite linear;
+}
+
+.login-page-container {
+  @keyframes float {
+    0% {
+      transform: translateY(0) rotate(0deg);
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(-1000px) rotate(720deg);
+      opacity: 0;
+    }
+  }
+}
+
+/* Loading button animation */
+.login-page-container .btn-primary:disabled {
+  position: relative;
+  overflow: hidden;
+}
+
+.login-page-container .btn-primary:disabled::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  animation: shimmer 1.5s infinite;
+}
+
+.login-page-container {
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .login-page-container .glass-card {
+    margin: 0 1rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .login-page-container .glass-card {
+    padding: 2rem 1.5rem !important;
+  }
+  
+  .login-page-container .glass-card h2 {
+    font-size: 1.5rem;
+  }
+  
+  .login-page-container .glass-card p {
+    font-size: 0.9rem;
+  }
+  
+  /* Hide video on very small devices if performance is an issue */
+  .login-page-container .background-video {
+    display: none;
+  }
+  
+  .login-page-container .video-background {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+}

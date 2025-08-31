@@ -1,0 +1,62 @@
+:root {
+  --dark-blue: #154d71;
+  --teal: #1c6ea4;
+  --sky-blue: #33a1e0;
+  --soft-yellow: #fff9af;
+}
+
+.about-hero {
+  color: white;
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+.about-container {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.about-title {
+  font-size: 2.8rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+  color: var(--soft-yellow);
+}
+
+.about-subtitle {
+  font-size: 1.2rem;
+  opacity: 0.9;
+  margin-bottom: 3rem;
+}
+
+.about-sections {
+  display: grid;
+  gap: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  margin-top: 2rem;
+}
+
+.about-sections section {
+  background: white;
+  color: var(--dark-blue);
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.about-sections section:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2);
+}
+
+.about-sections h2 {
+  color: var(--sky-blue);
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+}
+
+.about-sections p {
+  font-size: 1rem;
+  line-height: 1.6;
+}

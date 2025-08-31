@@ -1,0 +1,365 @@
+/* Global Styles */
+:root {
+    --primary-color: #3498db;
+    --secondary-color: #2c3e50;
+    --accent-color: #e74c3c;
+    --light-gray: #ecf0f1;
+    --dark-gray: #7f8c8d;
+    --white: #ffffff;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: #f5f7fa;
+    color: #333;
+    line-height: 1.6;
+}
+
+.container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px 0;
+}
+
+/* Header Styles */
+header {
+    background-color: var(--secondary-color);
+    color: var(--white);
+    padding: 20px 0;
+    margin-bottom: 30px;
+}
+
+header h1 {
+    font-size: 2.2rem;
+    margin-bottom: 20px;
+}
+
+.search-filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 10px;
+}
+
+.search-box {
+    flex: 1;
+    min-width: 250px;
+    position: relative;
+}
+
+.search-box input {
+    width: 100%;
+    padding: 12px 20px 12px 40px;
+    border-radius: 5px;
+    border: none;
+    font-size: 1rem;
+}
+
+.search-box i {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--dark-gray);
+}
+
+.filter-dropdown select {
+    padding: 12px 15px;
+    border-radius: 5px;
+    border: none;
+    font-size: 1rem;
+    min-width: 200px;
+    cursor: pointer;
+}
+
+/* Exam Grid Styles */
+.exam-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 25px;
+}
+
+.exam-card {
+    background-color: var(--white);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.exam-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.exam-card-header {
+    background-color: var(--primary-color);
+    color: var(--white);
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.exam-icon {
+    width: 40px;
+    height: 40px;
+    background-color: var(--white);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary-color);
+    font-size: 1.2rem;
+}
+
+.exam-card-body {
+    padding: 20px;
+}
+
+.exam-card-body p {
+    margin-bottom: 10px;
+    color: var(--dark-gray);
+}
+
+.exam-card-body .conducting-body {
+    font-weight: 600;
+    color: var(--secondary-color);
+}
+
+.exam-card-body .exam-date {
+    color: var(--accent-color);
+    font-weight: 600;
+}
+
+.exam-card-footer {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 20px 20px;
+}
+
+.btn {
+    padding: 10px 15px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: var(--white);
+}
+
+.btn-primary:hover {
+    background-color: #2980b9;
+}
+
+.btn-outline {
+    background-color: transparent;
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
+}
+
+.btn-outline:hover {
+    background-color: rgba(52, 152, 219, 0.1);
+}
+
+/* Exam Details Page Styles */
+.back-button {
+    display: inline-block;
+    margin-bottom: 20px;
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.back-button i {
+    margin-right: 5px;
+}
+
+.exam-header {
+    background-color: var(--primary-color);
+    color: var(--white);
+    padding: 30px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.exam-header .exam-icon {
+    width: 60px;
+    height: 60px;
+    font-size: 1.8rem;
+}
+
+.exam-header-content h1 {
+    font-size: 2rem;
+    margin-bottom: 5px;
+}
+
+.exam-header-content p {
+    opacity: 0.9;
+}
+
+.countdown {
+    margin-top: 10px;
+    font-weight: 600;
+}
+
+.key-info-table {
+    background-color: var(--white);
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.key-info-table h2 {
+    margin-bottom: 15px;
+    color: var(--secondary-color);
+}
+
+.key-info-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.key-info-table th, .key-info-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid var(--light-gray);
+}
+
+.key-info-table th {
+    width: 30%;
+    color: var(--secondary-color);
+}
+
+.detail-section {
+    background-color: var(--white);
+    padding: 25px;
+    border-radius: 8px;
+    margin-bottom: 25px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.detail-section h2 {
+    color: var(--secondary-color);
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--light-gray);
+}
+
+.action-buttons {
+    display: flex;
+    gap: 15px;
+    margin-top: 30px;
+    margin-bottom: 50px;
+    flex-wrap: wrap;
+}
+
+.register-btn {
+    background-color: var(--accent-color);
+    color: var(--white);
+    padding: 12px 25px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+    display: inline-block;
+}
+
+.register-btn:hover {
+    background-color: #c0392b;
+}
+
+.secondary-btn {
+    background-color: transparent;
+    border: 1px solid var(--dark-gray);
+    color: var(--dark-gray);
+    padding: 12px 25px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.secondary-btn:hover {
+    background-color: var(--light-gray);
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+    .exam-grid {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    }
+
+    .exam-header {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .action-buttons {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .search-filter {
+        flex-direction: column;
+    }
+
+    .filter-dropdown select {
+        width: 100%;
+    }
+
+    .exam-card-footer {
+        flex-direction: column;
+        gap: 10px;
+    }
+.exam-logo {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+}
+
+.tips-section ul {
+  padding-left: 20px;
+  list-style: disc;
+  color: var(--secondary-color);
+}
+
+.related-exams {
+  margin-top: 50px;
+}
+
+.exam-card.small {
+  padding: 15px;
+  text-align: center;
+}
+
+.exam-category {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: var(--light-gray);
+}
+
+    .btn {
+        width: 100%;
+    }
+}

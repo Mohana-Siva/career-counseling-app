@@ -1,0 +1,272 @@
+/* GradeSelection.css */
+.grade-selection-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 20px;
+}
+
+.grade-container {
+  max-width: 1000px;
+  padding: 40px 20px;
+}
+
+.selection-header {
+  margin-bottom: 50px;
+}
+
+.icon-container {
+  margin-bottom: 20px;
+}
+
+.header-icon {
+  font-size: 48px;
+  color: #4a6cf7;
+}
+
+.selection-header h1 {
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: #2d3748;
+  font-size: 36px;
+}
+
+.subtitle {
+  color: #718096;
+  font-size: 18px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.grade-cards-row {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  width: 100%;
+  
+  flex-wrap: nowrap; /* Keep cards on same line */
+  justify-content: center; /* Center the cards */
+ 
+}
+
+.grade-card-col {
+  display: flex;
+  justify-content: center;
+
+}
+
+.grade-card {
+  background: white;
+  border-radius: 16px;
+  padding: 40px 30px;
+  width: 100%;
+  max-width: 380px;
+  height: 380px;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  border: 2px solid transparent;
+  position: relative;
+  overflow: hidden;
+}
+
+.grade-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+}
+
+.grade-card.selected {
+  border-color: #4a6cf7;
+  box-shadow: 0 15px 35px rgba(74, 108, 247, 0.15);
+}
+
+.grade-card.faded {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.grade-card-10:hover {
+  border-color: #4a6cf7;
+}
+
+.grade-card-11:hover {
+  border-color: #4a6cf7;
+}
+
+.card-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  justify-content: space-between;
+}
+
+.grade-badge {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: #4a6cf7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: bold;
+  color: white;
+  margin-bottom: 25px;
+  box-shadow: 0 8px 20px rgba(74, 108, 247, 0.3);
+}
+
+.grade-card h3 {
+  color: #2d3748;
+  text-align: center;
+  margin-bottom: 30px;
+  font-weight: 600;
+  font-size: 24px;
+}
+
+.card-placeholder {
+  width: 100%;
+  height: 100px;
+  background: #f7f9fc;
+  border-radius: 12px;
+  margin-bottom: 30px;
+  border: 2px dashed #e2e8f0;
+}
+
+.select-text {
+  color: white;
+  font-weight: 600;
+  padding: 12px 30px;
+  background: #4a6cf7;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  font-size: 16px;
+}
+
+.grade-card:hover .select-text {
+  background: #3b5be0;
+  transform: translateY(-2px);
+}
+
+.selected .select-text {
+  background: #48bb78;
+}
+
+.loading-spinner {
+  width: 30px;
+  height: 30px;
+  border: 3px solid rgba(74, 108, 247, 0.3);
+  border-radius: 50%;
+  border-top: 3px solid #4a6cf7;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.loading-content {
+  background: white;
+  border-radius: 16px;
+  padding: 30px;
+  text-align: center;
+  color: #2d3748;
+  max-width: 400px;
+  width: 80%;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+}
+
+.loading-content p {
+  margin-bottom: 20px;
+  font-size: 18px;
+}
+
+.progress-container {
+  width: 100%;
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  width: 0%;
+  background: #4a6cf7;
+  border-radius: 4px;
+  animation: progressAnimation 1.5s infinite;
+}
+
+@keyframes progressAnimation {
+  0% { width: 0%; }
+  50% { width: 70%; }
+  100% { width: 100%; }
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+  .grade-cards-row {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .grade-card-col {
+    margin-bottom: 30px;
+    width: 100%;
+  }
+  
+  .grade-card {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 576px) {
+  .grade-selection-page {
+    padding: 15px;
+  }
+  
+  .selection-header h1 {
+    font-size: 28px;
+  }
+  
+  .subtitle {
+    font-size: 16px;
+  }
+  
+  .grade-card {
+    padding: 30px 20px;
+    height: 340px;
+  }
+  
+  .grade-badge {
+    width: 70px;
+    height: 70px;
+    font-size: 24px;
+  }
+  
+  .grade-card h3 {
+    font-size: 20px;
+  }
+  
+  .select-text {
+    padding: 10px 20px;
+  }
+}
