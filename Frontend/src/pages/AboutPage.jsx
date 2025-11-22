@@ -6,16 +6,16 @@ export default function AboutPage() {
   return (
     <div className="about-hero">
       <Container className="about-container">
-        <h1 className="about-title">About SkillSphere</h1>
-        <p className="about-subtitle">
-          Guiding students towards their dream careers with AI-driven insights.
+        <h1 className="about-title">About NextStep</h1>
+        <p className="about-subtitle" style={{ color: "blue" }} >
+          Guiding students towards their dream careers.
         </p>
 
         <div className="about-sections">
           <section>
             <h2>🌟 Our Mission</h2>
             <p>
-              SkillSphere helps students discover their ideal career paths
+              NextStep helps students discover their ideal career paths
               through AI-powered recommendations and personalized guidance.
               We aim to make career choices simple, clear, and future-focused.
             </p>
@@ -34,7 +34,7 @@ export default function AboutPage() {
           <section>
             <h2>👩‍🏫 The Team</h2>
             <p>
-              Founded by career guidance experts and AI specialists, SkillSphere
+              Founded by career guidance experts and AI specialists, NextStep
               is dedicated to empowering students with clarity and confidence in
               shaping their futures.
             </p>

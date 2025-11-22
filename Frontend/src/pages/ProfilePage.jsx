@@ -1,427 +1,342 @@
-import { useState, useRef, useEffect } from 'react';
-import { 
-  FaUser, FaGraduationCap, FaBullseye, FaSave, FaCamera, 
-  FaChevronDown, FaLinkedin, FaGithub, FaTwitter 
-} from 'react-icons/fa';
-import { IoMdMail } from 'react-icons/io';
-import { BsPhone } from 'react-icons/bs';
-import { MdLocationOn, MdCake } from 'react-icons/md';
+import { useState, useEffect, useRef } from "react";
+import {
+  FaUser,
+  FaGraduationCap,
+  FaBullseye,
+  FaChevronDown,
+  FaSave,
+} from "react-icons/fa";
+import { IoMdMail } from "react-icons/io";
+import { BsPhone } from "react-icons/bs";
+import { MdCake } from "react-icons/md";
 import axios from "axios";
-import '../components/styles/Profile.css';
-
+import "../components/styles/Profile.css";
 
 export default function ProfilePage() {
   const [profileData, setProfileData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    dob: '',
-    age: '',
-    mobile: '',
-    gender: '',
-    address: '',
-    grade: '',
-    interests: '',
-    skills: '',
-    careerPath: '',
-    careerGoal: '',
-    profilePic: '',
- 
+    // USER TABLE (Read-only on this form)
+    firstName: "",
+    lastName: "",
+    email: "",
+    grade: "",
+
+    // PROFILE TABLE (Editable)
+    mobileNumber: "",
+    dob: "",
+    careerInterest: "",
+    skills: "",
   });
 
+  const [age, setAge] = useState("");
   const [collapsedSections, setCollapsedSections] = useState({
     personalInfo: false,
-    education: false,
+    education: false, // Added education section for completeness in structure, even if no fields are present in the section-content currently.
     careerPreferences: false,
-    socialLinks: false
   });
 
-  const contentRefs = {
+  const refs = {
     personalInfo: useRef(null),
     education: useRef(null),
     careerPreferences: useRef(null),
-    socialLinks: useRef(null)
-  };
-useEffect(() => {
-  const fetchProfile = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) return;
-
-const { data } = await axios.get("http://localhost:5000/api/users/profile", {
-  headers: { Authorization: `Bearer ${token}` },
-});
-
-
-      setProfileData((prev) => ({ ...prev, ...data }));
-    } catch (error) {
-      console.error("Error fetching profile:", error);
-    }
   };
 
-  fetchProfile();
-}, []);
-  const toggleSection = (section) => {
-    setCollapsedSections(prev => ({
-      ...prev,
-      [section]: !prev[section]
-    }));
-  };
+  // ------------------ FETCH USER + PROFILE DATA ------------------
+  useEffect(() => {
+    const fetchAll = async () => {
+      try {
+        const token = localStorage.getItem("token");
 
-  const handleProfilePicChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setProfileData(prev => ({ ...prev, profilePic: e.target.result }));
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+        const userRes = await axios.get(
+          "http://localhost:5000/api/users/me",
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
 
-  const handleInputChange = (e) => {
+        const profileRes = await axios.get(
+          "http://localhost:5000/api/profile",
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        const user = userRes.data;
+        const profile = profileRes.data;
+
+        // Auto-calc age
+        let calculatedAge = "";
+        if (profile?.dob) {
+          const d = new Date(profile.dob);
+          // Fixed a potential issue with date formatting for input type="date"
+          // We must ensure the date is in YYYY-MM-DD format for the input field.
+          const formattedDob = profile.dob.split('T')[0]; 
+          
+          calculatedAge = new Date(Date.now() - d.getTime()).getUTCFullYear() - 1970;
+
+          setProfileData({
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email,
+            grade: user.grade || "",
+
+            mobileNumber: profile?.mobileNumber || "",
+            dob: formattedDob || "", // Use formatted DOB for the input
+            careerInterest: profile?.careerInterest || "",
+            skills: profile?.skills || "",
+          });
+        } else {
+            setProfileData({
+                firstName: user.firstName,
+                lastName: user.lastName,
+                email: user.email,
+                grade: user.grade || "",
+    
+                mobileNumber: profile?.mobileNumber || "",
+                dob: "",
+                careerInterest: profile?.careerInterest || "",
+                skills: profile?.skills || "",
+            });
+        }
+        
+        setAge(calculatedAge);
+      } catch (err) {
+        console.error("Error fetching:", err);
+      }
+    };
+
+    fetchAll();
+  }, []);
+
+  // ------------------ INPUT HANDLER ------------------
+  const handleInput = (e) => {
     const { id, value } = e.target;
-    setProfileData(prev => ({ ...prev, [id]: value }));
 
-    if (id === 'dob' && value) {
-      const dob = new Date(value);
-      if (!isNaN(dob.getTime())) {
-        const diff = Date.now() - dob.getTime();
-        const ageDate = new Date(diff);
-        const age = Math.abs(ageDate.getUTCFullYear() - 1970);
-        setProfileData(prev => ({ ...prev, age: age.toString() }));
+    setProfileData((prev) => ({
+      ...prev,
+      [id]: value,
+    }));
+
+    // recalc age
+    if (id === "dob") {
+      const d = new Date(value);
+      if (!isNaN(d)) {
+        const a = new Date(Date.now() - d.getTime()).getUTCFullYear() - 1970;
+        setAge(a);
+      } else {
+        setAge(""); // Clear age if date is invalid/cleared
       }
     }
   };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  try {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      alert("Please log in again.");
-      return;
-    }
+  // ------------------ SAVE PROFILE ------------------
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const token = localStorage.getItem("token");
 
-const { data } = await axios.put(
-  "http://localhost:5000/api/users/profile",
-  profileData,
-  { headers: { Authorization: `Bearer ${token}` } }
-);
+      await axios.put(
+        "http://localhost:5000/api/profile",
+        {
+          mobileNumber: profileData.mobileNumber,
+          dob: profileData.dob,
+          careerInterest: profileData.careerInterest,
+          skills: profileData.skills,
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
-
-    setProfileData((prev) => ({ ...prev, ...data }));
-    alert("Profile saved successfully!");
-  } catch (error) {
-    console.error("Error saving profile:", error);
-    alert("Error saving profile. Please try again.");
-  }
-};
-
-
-  const getHeightStyle = (section) => {
-    if (collapsedSections[section]) {
-      return { height: 0, overflow: 'hidden', transition: 'height 0.4s ease' };
-    } else if (contentRefs[section].current) {
-      return { height: contentRefs[section].current.scrollHeight + 'px', transition: 'height 0.4s ease' };
-    } else {
-      return {};
+      alert("Profile updated successfully! ✅");
+    } catch (err) {
+      alert("Error updating profile ❌");
+      console.log(err);
     }
   };
 
+  // ------------------ COLLAPSE SECTIONS ------------------
+  const toggleSection = (key) => {
+    setCollapsedSections((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  };
+
+  // UX Enhancement: Improved height calculation for smoother collapse
+  const getHeightStyle = (key) => {
+    const ref = refs[key]?.current;
+    if (collapsedSections[key] || !ref) {
+      return { height: 0, overflow: "hidden", transition: ".3s ease-out" };
+    }
+    // Set height to 'auto' after the transition for accessibility/flow, but during transition, use scrollHeight
+    return {
+      height: `${ref.scrollHeight}px`,
+      overflow: 'hidden',
+      transition: ".3s ease-in-out",
+    };
+  };
+
   return (
-    <>
-
-
-      <div className="profile-container">
-        {/* Sidebar */}
-        <div className="profile-sidebar">
-          <div className="profile-pic-container">
-            {profileData.profilePic ? (
-              <img 
-                src={profileData.profilePic} 
-                alt="Profile" 
-                className="profile-pic"
-              />
-            ) : (
-              <div style={{ color: '#999', fontSize: '3rem' }}>👤</div>
-            )}
-            <label htmlFor="profilePic" className="profile-pic-upload">
-              <FaCamera size={14} />
-              <input 
-                type="file" 
-                id="profilePic" 
-                accept="image/*" 
-                onChange={handleProfilePicChange} 
-                style={{ display: 'none' }}
-              />
-            </label>
-          </div>
-
-          <h2 className="profile-name">
-            {profileData.firstName || 'Your Name'} {profileData.lastName}
-          </h2>
-          <p className="profile-title">Career Guidance Platform</p>
-
-          <div className="profile-info">
-            <div className="info-item">
-              <IoMdMail />
-              <span>{profileData.email || 'your.email@example.com'}</span>
-            </div>
-            <div className="info-item">
-              <BsPhone />
-              <span>{profileData.mobile || '+91 1234567890'}</span>
-            </div>
-            <div className="info-item">
-              <MdLocationOn />
-              <span>{profileData.address || 'Your address'}</span>
-            </div>
-            <div className="info-item">
-              <MdCake />
-              <span>{profileData.age ? `${profileData.age} years` : 'Your age'}</span>
-            </div>
-          </div>
+    <div className="profile-container">
+      {/* ------------------ SIDEBAR ------------------ */}
+      <div className="profile-sidebar">
+        {/* UX Enhancement: Added basic profile picture section for better visual framing */}
+        <div className="profile-pic-container">
+            {/* Placeholder for a user icon or actual image */}
+            <FaUser size={60} color="var(--primary)" /> 
         </div>
 
-        {/* Main Content */}
-        <div className="profile-content">
-          <div className="profile-header">
-            <h1>Profile Settings</h1>
-          </div>
+        <h2 className="profile-name">
+          {profileData.firstName} {profileData.lastName}
+        </h2>
+        <p className="profile-title">Student</p>
 
-          <form onSubmit={handleSubmit}>
-            {/* Personal Information */}
-            <div className="profile-section">
-              <div 
-                className="section-header" 
-                onClick={() => toggleSection('personalInfo')}
-              >
+        <div className="profile-info"> {/* Added class for grouping */}
+            <div className="info-item">
+              <IoMdMail /> <span>{profileData.email}</span>
+            </div>
+
+            <div className="info-item">
+              <BsPhone /> <span>{profileData.mobileNumber || "Not added"}</span>
+            </div>
+
+            <div className="info-item">
+              <FaGraduationCap /> <span>Grade {profileData.grade || "Not added"}</span>
+            </div>
+
+            <div className="info-item">
+              <MdCake /> <span>{age ? `${age} years old` : "DOB not added"}</span>
+            </div>
+        </div>
+      </div>
+
+      {/* ------------------ MAIN CONTENT ------------------ */}
+      <div className="profile-content">
+        <h1 className="title">Profile Settings ⚙️</h1>
+
+        <form onSubmit={handleSubmit}>
+          {/* USER INFO (Read-Only fields from User table) */}
+          <div className="profile-section read-only-section"> 
+            <div className="section-header">
                 <div className="section-title">
-                  <FaUser />
-                  <span>Personal Information</span>
+                    <FaUser />
+                    <span>Account Details (Read-Only)</span>
                 </div>
-                <FaChevronDown 
-                  className={`section-chevron ${collapsedSections.personalInfo ? '' : 'rotated'}`} 
-                  size={14} 
-                />
-              </div>
-              <div
-                ref={contentRefs.personalInfo}
-                className="section-content"
-                style={getHeightStyle('personalInfo')}
-              >
+            </div>
+            <div className="section-content read-only-content">
                 <div className="form-grid">
-                  <div className="form-group">
-                    <label htmlFor="firstName">First Name</label>
-                    <input
-                      type="text"
-                      id="firstName"
-                      className="form-control"
-                      value={profileData.firstName}
-                      onChange={handleInputChange}
-                      placeholder="Enter your first name"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="lastName">Last Name</label>
-                    <input
-                      type="text"
-                      id="lastName"
-                      className="form-control"
-                      value={profileData.lastName}
-                      onChange={handleInputChange}
-                      placeholder="Enter your last name"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="email">Email</label>
-                    <input
-                      type="email"
-                      id="email"
-                      className="form-control"
-                      value={profileData.email}
-                      onChange={handleInputChange}
-                      placeholder="Enter your email"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="mobile">Mobile</label>
-                    <input
-                      type="tel"
-                      id="mobile"
-                      className="form-control"
-                      value={profileData.mobile}
-                      onChange={handleInputChange}
-                      placeholder="Enter your phone number"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="dob">Date of Birth</label>
-                    <input
-                      type="date"
-                      id="dob"
-                      className="form-control"
-                      value={profileData.dob}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="age">Age</label>
-                    <input
-                      type="number"
-                      id="age"
-                      className="form-control"
-                      value={profileData.age}
-                      readOnly
-                      placeholder="Auto-calculated"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="gender">Gender</label>
-                    <select
-                      id="gender"
-                      className="form-control"
-                      value={profileData.gender}
-                      onChange={handleInputChange}
-                    >
-                      <option value="">Select gender</option>
-                      <option value="Male">Male</option>
-                      <option value="Female">Female</option>
-                      <option value="Other">Other</option>
-                    </select>
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="address">Address</label>
-                    <textarea
-                      id="address"
-                      className="form-control"
-                      value={profileData.address}
-                      onChange={handleInputChange}
-                      placeholder="Enter your address"
-                    />
-                  </div>
+                    {/* UX Enhancement: Read-only fields get form-control-static class for distinct styling */}
+                    <div className="form-group">
+                        <label>First Name</label>
+                        <input value={profileData.firstName} className="form-control-static" disabled />
+                    </div>
+
+                    <div className="form-group">
+                        <label>Last Name</label>
+                        <input value={profileData.lastName} className="form-control-static" disabled />
+                    </div>
+
+                    <div className="form-group">
+                        <label>Email</label>
+                        <input value={profileData.email} className="form-control-static" disabled />
+                    </div>
+
+                    <div className="form-group">
+                        <label>Grade</label>
+                        <input value={profileData.grade} className="form-control-static" disabled />
+                    </div>
+                </div>
+            </div>
+          </div>
+          {/* END USER INFO */}
+
+          {/* PERSONAL INFO (Editable fields from Profile table) */}
+          <div className="profile-section">
+            <div className="section-header" onClick={() => toggleSection("personalInfo")}>
+              <div className="section-title">
+                <FaUser />
+                <span>Personal Information (Editable)</span>
+              </div>
+              <FaChevronDown className={collapsedSections.personalInfo ? "" : "rotated"} />
+            </div>
+
+            <div
+              ref={refs.personalInfo}
+              className="section-content collapsible-content"
+              style={getHeightStyle("personalInfo")}
+            >
+              <div className="form-grid">
+                <div className="form-group">
+                  <label htmlFor="mobileNumber">Mobile Number</label> {/* Accessibility: Added htmlFor */}
+                  <input
+                    id="mobileNumber"
+                    className="form-control" // UX Enhancement: Added class for styling
+                    value={profileData.mobileNumber}
+                    onChange={handleInput}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="dob">Date of Birth</label>
+                  <input
+                    id="dob"
+                    className="form-control" // UX Enhancement: Added class for styling
+                    type="date"
+                    value={profileData.dob}
+                    onChange={handleInput}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Age</label>
+                  <input value={age ? `${age} years` : "N/A"} className="form-control-static" disabled />
                 </div>
               </div>
             </div>
+          </div>
+          {/* END PERSONAL INFO */}
 
-            {/* Education */}
-            <div className="profile-section">
-              <div 
-                className="section-header" 
-                onClick={() => toggleSection('education')}
-              >
-                <div className="section-title">
-                  <FaGraduationCap />
-                  <span>Education</span>
-                </div>
-                <FaChevronDown 
-                  className={`section-chevron ${collapsedSections.education ? '' : 'rotated'}`} 
-                  size={14} 
+          {/* CAREER PREFERENCES */}
+          <div className="profile-section">
+            <div className="section-header" onClick={() => toggleSection("careerPreferences")}>
+              <div className="section-title">
+                <FaBullseye />
+                <span>Career Preferences</span>
+              </div>
+              <FaChevronDown className={collapsedSections.careerPreferences ? "" : "rotated"} />
+            </div>
+
+            <div
+              ref={refs.careerPreferences}
+              className="section-content collapsible-content"
+              style={getHeightStyle("careerPreferences")}
+            >
+              <div className="form-group">
+                <label htmlFor="careerInterest">Career Interest</label>
+                <input
+                  id="careerInterest"
+                  className="form-control" // UX Enhancement: Added class for styling
+                  value={profileData.careerInterest}
+                  onChange={handleInput}
                 />
               </div>
-              <div
-                ref={contentRefs.education}
-                className="section-content"
-                style={getHeightStyle('education')}
-              >
-                <div className="form-group">
-                  <label htmlFor="educationLevel">Current Education Level</label>
-                  <select
-                    id="grade"
-                    className="form-control"
-                    value={profileData.grade}
-                    onChange={handleInputChange}
-                  >
-                    <option value="">Select Education Level</option>
-                    <option value="10th Grade">10th Grade</option>
-                    <option value="11th Grade">11th Grade</option>
-                    <option value="12th Grade">12th Grade</option>
-                    <option value="Undergraduate">Undergraduate</option>
-                    <option value="Graduate">Graduate</option>
-                    <option value="Postgraduate">Postgraduate</option>
-                  </select>
-                </div>
+
+              <div className="form-group">
+                <label htmlFor="skills">Skills</label>
+                <textarea // UX Enhancement: Switched to textarea for Skills for more space
+                  id="skills"
+                  className="form-control"
+                  rows="3"
+                  value={profileData.skills}
+                  onChange={handleInput}
+                />
               </div>
             </div>
-
-            {/* Career Preferences Section */}
-<div className="profile-section">
-  <div 
-    className="section-header" 
-    onClick={() => toggleSection('careerPreferences')}
-  >
-    <div className="section-title">
-      <FaBullseye />
-      <span>Career Preferences</span>
-    </div>
-    <FaChevronDown 
-      className={`section-chevron ${collapsedSections.careerPreferences ? '' : 'rotated'}`} 
-      size={14} 
-    />
-  </div>
-  <div
-    ref={contentRefs.careerPreferences}
-    className="section-content"
-    style={getHeightStyle('careerPreferences')}
-  >
-    <div className="form-grid">
-      <div className="form-group">
-        <label htmlFor="interests">Career Interests</label>
-        <input
-          type="text"
-          id="interests"
-          className="form-control"
-          value={profileData.interests}
-          onChange={handleInputChange}
-          placeholder="e.g. Healthcare, Finance, Creative Arts, Technology"
-        />
-      </div>
-      <div className="form-group">
-        <label htmlFor="skills">Skills</label>
-        <input
-          type="text"
-          id="skills"
-          className="form-control"
-          value={profileData.skills}
-          onChange={handleInputChange}
-          placeholder="e.g. Communication, Data Analysis, Graphic Design"
-        />
-      </div>
-      <div className="form-group">
-        <label htmlFor="careerPath">Preferred Career Path</label>
-        <input
-          type="text"
-          id="careerPath"
-          className="form-control"
-          value={profileData.careerPath}
-          onChange={handleInputChange}
-          placeholder="e.g. Digital Marketing, Nursing, Financial Analyst"
-        />
-      </div>
-      <div className="form-group">
-        <label htmlFor="careerGoal">Career Goal</label>
-        <input
-          type="text"
-          id="careerGoal"
-          className="form-control"
-          value={profileData.careerGoal}
-          onChange={handleInputChange}
-          placeholder="e.g. Become a Marketing Director in 5 years"
-        />
-      </div>
-    </div>
-  </div>
-</div>
-
-
-
+          </div>
+          {/* END CAREER PREFERENCES */}
+          
+          <div className="save-button-container">
             <button type="submit" className="btn btn-primary">
-              <FaSave />
-              Save Profile
+              <FaSave /> Save Profile Updates
             </button>
-          </form>
-        </div>
+          </div>
+        </form>
       </div>
-    </>
+    </div>
   );
 }
+

@@ -41,7 +41,7 @@ if (storedName) setUserName(storedName);
       image: "/images/explorer.jpg"
     },
     {
-      title: "AI Career Advisor",
+      title: "NALA ",
      
       text: "Get personalized advice from our AI-powered assistant.",
       link: "/ai-career-advisor",

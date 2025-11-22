@@ -18,6 +18,8 @@ import "./App.css";
 import CareerQuiz11th12th from "./src/pages/CareerQuiz11th12th";
 import EntranceExam from "./src/pages/EntranceExam";
 import ScholarshipSection from "./src/pages/ScholarshipSection";
+import ChoiseListGenerator from "./src/pages/ChoiselistGenerator";
+
 // Layout that includes Navbar
 function LayoutWithNavbar() {
   return (
@@ -57,6 +59,7 @@ function App() {
           <Route path="/entrance-exam" element={<ProtectedRoute><EntranceExam /></ProtectedRoute>} />
           <Route path="/scholarship" element={<ProtectedRoute><ScholarshipSection /></ProtectedRoute>} />
           <Route path="/entrance-exams/:examId?" element={<EntranceExam />} />
+          <Route path="/choiselist" element={<ChoiseListGenerator/> } />
         </Route>
         
       </Routes>
