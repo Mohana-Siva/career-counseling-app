@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import axios from "axios";
 import { Form, Button } from "react-bootstrap";
 import ReactMarkdown from "react-markdown";
+import { API_BASE_URL } from "../config/api";
 
 const AdvisorStyles = () => (
   <style>{`
@@ -202,7 +203,7 @@ function AICareerAdvisor() {
   const fetchChatHistory = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get("http://localhost:5000/api/chats/all", {
+      const res = await axios.get(`${API_BASE_URL}/api/chats/all`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -216,7 +217,7 @@ function AICareerAdvisor() {
     try {
       const token = localStorage.getItem("token");
 
-      const res = await axios.get(`http://localhost:5000/api/chats/${id}`, {
+      const res = await axios.get(`${API_BASE_URL}/api/chats/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -233,7 +234,7 @@ const saveChatToDB = async (messages) => {
 
     // Send request: backend decides create/update
     const res = await axios.post(
-      "http://localhost:5000/api/chats/save",
+      `${API_BASE_URL}/api/chats/save`,
       { chatId, messages },
       { headers: { Authorization: `Bearer ${token}` } }
     );
@@ -261,7 +262,7 @@ const handleSend = async (e) => {
   setIsTyping(true);
 
   try {
-    const res = await axios.post("http://localhost:5000/chat-with-groq", {
+    const res = await axios.post(`${API_BASE_URL}/chat-with-groq`, {
       chatHistory: updatedChat,
     });
 

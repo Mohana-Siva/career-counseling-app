@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import axios from 'axios';
 import { Form, Button, Container, Row, Col, Spinner, Alert, Table } from 'react-bootstrap';
+import { API_BASE_URL } from '../config/api';
 
 // Style component to embed CSS directly, avoiding path errors.
 const Style = () => (
@@ -40,7 +41,7 @@ function ChoiceListGenerator() {
     setSearched(true);
 
     try {
-      const response = await axios.post('http://localhost:5000/api/generate-choice-list', {
+      const response = await axios.post(`${API_BASE_URL}/api/generate-choice-list`, {
         cutoff: parseFloat(cutoff),
         community: community,
       });

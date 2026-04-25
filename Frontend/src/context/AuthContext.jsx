@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import axios from "axios";
+import { API_BASE_URL } from "../config/api";
 
 const AuthContext = createContext();
 
@@ -10,11 +11,18 @@ export const AuthProvider = ({ children }) => {
   // Check login status on load
   useEffect(() => {
     const checkAuth = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+
       try {
-        const res = await axios.get("https://authentication-7371.onrender.com/api/auth/me", {
-          withCredentials: true,
+        const res = await axios.get(`${API_BASE_URL}/api/users/me`, {
+          headers: { Authorization: `Bearer ${token}` },
         });
-        setUser(res.data.user);
+        setUser(res.data);
       } catch (err) {
         setUser(null);
       } finally {

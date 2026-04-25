@@ -4,6 +4,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import '../components/styles/LoginPage.css';
 import { FiUser, FiMail, FiLock, FiEye, FiEyeOff, FiArrowRight } from 'react-icons/fi';
 import bg from "../assets/background.mp4";
+import { API_BASE_URL } from "../config/api";
 
 export default function SignUpPage() {
   const [firstName, setFirstName] = useState("");
@@ -44,7 +45,7 @@ export default function SignUpPage() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("http://localhost:5000/api/auth/register", {
+      const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ firstName, lastName, email, password }),

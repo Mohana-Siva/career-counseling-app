@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Container, Row, Col } from "react-bootstrap";
 import axios from "axios";
+import { API_BASE_URL } from "../config/api";
 
 import { FaGraduationCap } from "react-icons/fa";
 
@@ -25,7 +26,7 @@ const GradeSelection = () => {
 
       // Save grade to backend
 await axios.put(
-  "http://localhost:5000/api/auth/update-grade",
+  `${API_BASE_URL}/api/auth/update-grade`,
   { grade },
   { headers: { Authorization: `Bearer ${token}` } }
 );

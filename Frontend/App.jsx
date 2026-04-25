@@ -9,7 +9,7 @@ import CareerExplorer from "./src/pages/CareerExplorer";
 import AICareerAdvisor from "./src/pages/AICareerAdvisor";
 import ProfilePage from "./src/pages/ProfilePage";
 import ProtectedRoute from "./src/components/ProtectedRoute";
-import Navbar from "./src/components/navbar";
+import Navbar from "./src/components/Navbar";
 import AboutPage from './src/pages/AboutPage';
 import CareerQuiz from './src/pages/CareerQuiz';
 import CounselingBooking from "./src/pages/CounselingBooking";

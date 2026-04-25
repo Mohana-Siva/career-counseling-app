@@ -11,6 +11,7 @@ import { BsPhone } from "react-icons/bs";
 import { MdCake } from "react-icons/md";
 import axios from "axios";
 import "../components/styles/Profile.css";
+import { API_BASE_URL } from "../config/api";
 
 export default function ProfilePage() {
   const [profileData, setProfileData] = useState({
@@ -47,12 +48,12 @@ export default function ProfilePage() {
         const token = localStorage.getItem("token");
 
         const userRes = await axios.get(
-          "http://localhost:5000/api/users/me",
+          `${API_BASE_URL}/api/users/me`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
         const profileRes = await axios.get(
-          "http://localhost:5000/api/profile",
+          `${API_BASE_URL}/api/profile`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
@@ -131,7 +132,7 @@ export default function ProfilePage() {
       const token = localStorage.getItem("token");
 
       await axios.put(
-        "http://localhost:5000/api/profile",
+        `${API_BASE_URL}/api/profile`,
         {
           mobileNumber: profileData.mobileNumber,
           dob: profileData.dob,
