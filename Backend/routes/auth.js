@@ -1,7 +1,6 @@
 import express from "express";
 import User from "../models/User.js";
 import jwt from "jsonwebtoken";
-import bcrypt from "bcryptjs";
 import protect from "../middleware/authMiddleware.js";
 
 const router = express.Router();
@@ -46,7 +45,7 @@ router.post("/register", async (req, res) => {
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
-    console.log("Login attempt:", email, password);
+    console.log("Login attempt:", email);
 
     const user = await User.findOne({ email });
 

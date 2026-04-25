@@ -12,12 +12,24 @@ import chatRoutes from "./routes/chatRoutes.js";
 dotenv.config();
 
 const app = express();
+const PORT = process.env.PORT || 5000;
+
+const allowedOrigins = process.env.CLIENT_ORIGINS
+  ? process.env.CLIENT_ORIGINS.split(",").map((origin) => origin.trim()).filter(Boolean)
+  : ["http://localhost:5173", "https://authentication-xi-eight.vercel.app"];
 
 // Middleware
-app.use(cors({
-  origin: ["http://localhost:5173", "https://authentication-xi-eight.vercel.app"],
-  credentials: true
-}));
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error("CORS not allowed for this origin"));
+    },
+    credentials: true,
+  })
+);
 
 // Increase JSON payload limit
 app.use(express.json({ limit: "5mb" }));
@@ -41,15 +53,15 @@ mongoose.connect(process.env.MONGO_URI, {
 
 // Routes
 // Any request to "/chat-with-groq" will now be handled by aiRoutes
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "ok" });
+});
+
 app.use("/chat-with-groq", aiRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
-
 app.use("/api/profile", profileRoutes);
 app.use("/api/chats", chatRoutes);
-
 app.use("/api/generate-choice-list", choiceListRoutes);
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-});
+
+
