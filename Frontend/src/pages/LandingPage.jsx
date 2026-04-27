@@ -64,24 +64,22 @@ export default function LandingPage() {
               <li><i className="fas fa-graduation-cap"></i> College Roadmaps</li>
             </ul>
           </div>
-
-          <div className="footer-section animate-slideup">
+<div className="footer-section animate-slideup">
+            <h3>Contact Us</h3>
+            <ul>
+              <li><i className="fas fa-envelope"></i> nextstep@gmail.com</li>
+            </ul>
+          </div>
+          <div className="footer-section animate-slideright">
             <h3>Why Choose Us?</h3>
             <ul>
               <li><i className="fas fa-certificate"></i> 92% Accuracy Rate</li>
-              <li><i className="fas fa-users"></i> 100,000+ Success Stories</li>
+              <li><i className="fas fa-users"></i> Know Your Skill</li>
               <li><i className="fas fa-headset"></i> 24/7 Advisor Support</li>
             </ul>
           </div>
 
-          <div className="footer-section animate-slideright">
-            <h3>Contact Us</h3>
-            <ul>
-              <li><i className="fas fa-envelope"></i> hello@nextstep.com</li>
-              <li><i className="fas fa-phone"></i> (123) 456-7890</li>
-              <li><i className="fas fa-map-marker-alt"></i> New York, NY</li>
-            </ul>
-          </div>
+          
         </div>
 
         <div className="footer-divider"></div>
