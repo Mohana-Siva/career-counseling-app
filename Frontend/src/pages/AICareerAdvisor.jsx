@@ -76,6 +76,23 @@ const AdvisorStyles = () => (
       margin-bottom: 24px;
     }
 
+    .prompt-help {
+      margin-bottom: 16px;
+      padding: 12px 14px;
+      border: 1px solid #bfdbfe;
+      background-color: #eff6ff;
+      border-radius: 10px;
+      color: #1e3a8a;
+      font-size: 0.92rem;
+      line-height: 1.5;
+    }
+
+    .prompt-help strong {
+      display: block;
+      margin-bottom: 4px;
+      color: #1e40af;
+    }
+
     .chat-box {
       flex-grow: 1;
       overflow-y: auto;
@@ -328,6 +345,11 @@ const handleSend = async (e) => {
         {/* MAIN CHAT */}
         <main className="ai-advisor-container">
           <h2 className="chat-title">AI Career Advisor (Nala)</h2>
+          <div className="prompt-help">
+            <strong>Choice List Prompt Format</strong>
+            To generate a college choice list, include <code>choice list</code> or <code>cutoff</code>, your cutoff value, and community code (<code>OC</code>, <code>BC</code>, <code>BCM</code>, <code>MBC</code>, <code>SC</code>, <code>SCA</code>, <code>ST</code>).
+            Example: <code>Generate my choice list for cutoff 178.5 BC</code>
+          </div>
 
           <div className="chat-box">
             {chat.map((msg, i) => (
@@ -359,7 +381,7 @@ const handleSend = async (e) => {
               onChange={(e) => setMessage(e.target.value)}
               onKeyDown={handleKeyDown}
               className="chat-input"
-              placeholder="Ask something..."
+              placeholder="Example: Generate my choice list for cutoff 178.5 BC"
             />
             <Button type="submit" className="send-btn" disabled={isTyping}>
               Send
