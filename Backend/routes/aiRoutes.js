@@ -2,6 +2,8 @@ import express from "express";
 import dotenv from 'dotenv';
 import Groq from 'groq-sdk';
 import College from '../models/College.js';
+import Profile from "../models/Profile.js";
+import protect from "../middleware/authMiddleware.js";
 
 dotenv.config();
 const router = express.Router();
@@ -11,11 +13,37 @@ const router = express.Router();
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 // --- Main AI Router ---
-router.post("/", async (req, res) => {
+router.post("/", protect, async (req, res) => {
   try {
-    const { chatHistory } = req.body;
+    const { chatHistory, quizResult } = req.body;
+    if (!Array.isArray(chatHistory) || chatHistory.length === 0) {
+      return res.status(400).json({ error: "chatHistory is required." });
+    }
+
     const userQuery = chatHistory[chatHistory.length - 1].text.toLowerCase();
     const fullQuery = chatHistory[chatHistory.length - 1].text; // Keep original case for the AI
+    const profile = await Profile.findOne({ user: req.user.id }).select(
+      "latestQuizResult latestQuizUpdatedAt"
+    );
+    const storedQuizResult = profile?.latestQuizResult || null;
+    const effectiveQuizResult =
+      quizResult && typeof quizResult === "object" ? quizResult : storedQuizResult;
+
+    const hasQuizContext = Boolean(
+      effectiveQuizResult && typeof effectiveQuizResult === "object"
+    );
+    const quizContextText = hasQuizContext
+      ? JSON.stringify(effectiveQuizResult, null, 2)
+      : "No quiz context provided.";
+
+    const quizContextMessage = hasQuizContext
+      ? {
+          role: "user",
+          content:
+            "Student profile from completed quiz (treat this as true profile context for personalization):\n" +
+            quizContextText,
+        }
+      : null;
 
     // --- 1. INTENT RECOGNITION ---
     const isCutoffQuery = userQuery.includes('cutoff') || userQuery.includes('choice list');
@@ -62,10 +90,17 @@ router.post("/", async (req, res) => {
       const context = eligibleColleges.map(c =>
         `- **${c.collegeName}** (Code: ${c.tneaCode})\n  - Branch: ${c.branchName}\n  - 2024 Cutoff: ${c.lastYearCutoff}\n  - NIRF Rank: ${c.nirfRank === 999 ? 'Not Ranked' : c.nirfRank}`
       ).join('\n');
-      const systemPrompt = `You are Nala, an expert TNEA career advisor...`; // Same as before
+      const systemPrompt = `You are Nala, an expert TNEA career advisor.
+Use the user's quiz context when relevant to personalize suggestions (stream fit, recommended careers, skill profile).
+If quiz context exists, align explanation style with it but keep college eligibility strictly based on provided cutoff data.
+If no quiz context is provided, ask one brief clarifying question before recommending.`;
       const augmentedPrompt = `ELIGIBLE COLLEGES:\n${context}\n\nBased on this data, please generate the choice list.`;
+      const messages = [{ role: "system", content: systemPrompt }];
+      if (quizContextMessage) messages.push(quizContextMessage);
+      messages.push({ role: "user", content: augmentedPrompt });
+
       const chatCompletion = await groq.chat.completions.create({
-        messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: augmentedPrompt }],
+        messages,
         model: 'llama-3.1-8b-instant',
       });
       return res.json({ reply: chatCompletion.choices[0]?.message?.content || '' });
@@ -75,14 +110,19 @@ router.post("/", async (req, res) => {
       console.log("Fallback: General Query. Using Groq's general knowledge.");
 
       // This system prompt gives the AI its persona without any external context.
-      const systemPrompt = `You are Nala, a helpful and friendly AI Career Advisor for students in India. Answer the user's question clearly and concisely. Format your answers with Markdown for readability.`;
+      const systemPrompt = `You are Nala, a helpful and friendly AI Career Advisor for students in India.
+Use the quiz result context to personalize advice, course suggestions, and next steps.
+When referencing quiz context, mention why recommendations match the user's profile.
+If quiz context exists, do not ask the user again to choose interests/stream unless they ask to retake.
+Answer clearly and concisely. Format your answers with Markdown for readability.
+If quiz context is missing, ask a single clarifying question before recommending careers.`;
 
-      // We only send the system prompt and the user's latest question.
+      const messages = [{ role: "system", content: systemPrompt }];
+      if (quizContextMessage) messages.push(quizContextMessage);
+      messages.push({ role: "user", content: fullQuery });
+
       const chatCompletion = await groq.chat.completions.create({
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: fullQuery } // Use the original cased query
-        ],
+        messages,
         model: 'llama-3.1-8b-instant',
       });
       

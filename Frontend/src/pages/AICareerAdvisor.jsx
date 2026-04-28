@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import axios from "axios";
 import { Form, Button } from "react-bootstrap";
 import ReactMarkdown from "react-markdown";
+import { useLocation } from "react-router-dom";
 import { API_BASE_URL } from "../config/api";
 
 const AdvisorStyles = () => (
@@ -193,16 +194,29 @@ const AdvisorStyles = () => (
 
 
 function AICareerAdvisor() {
+  const BOT_WELCOME_MESSAGE = {
+    sender: "bot",
+    text: "Hello! I'm Nala, your AI Career Advisor. Ask me anything about careers in India.",
+  };
+
+  const location = useLocation();
+  const initialQuizContext = (() => {
+    if (location.state?.quizResult) return location.state.quizResult;
+    const storedQuiz = localStorage.getItem("latestQuizResult");
+    if (!storedQuiz) return null;
+    try {
+      return JSON.parse(storedQuiz);
+    } catch (error) {
+      console.error("Failed to parse latest quiz result", error);
+      return null;
+    }
+  })();
   const [message, setMessage] = useState("");
-  const [chat, setChat] = useState([
-    {
-      sender: "bot",
-      text: "👋 Hello! I'm Nala, your AI Career Advisor. Ask me anything about careers in India.",
-    },
-  ]);
+  const [chat, setChat] = useState([BOT_WELCOME_MESSAGE]);
   const [chatId, setChatId] = useState(null); // ✅ FIXED (now inside component)
   const [isTyping, setIsTyping] = useState(false);
   const [history, setHistory] = useState([]);
+  const [quizContext, setQuizContext] = useState(initialQuizContext);
 
   const chatEndRef = useRef(null);
   const scrollToBottom = () => {
@@ -212,6 +226,13 @@ function AICareerAdvisor() {
   useEffect(() => {
     fetchChatHistory();
   }, []);
+
+  useEffect(() => {
+    const stateQuiz = location.state?.quizResult;
+    if (stateQuiz) {
+      setQuizContext(stateQuiz);
+    }
+  }, [location.state]);
 
   useEffect(() => {
     scrollToBottom();
@@ -243,6 +264,12 @@ function AICareerAdvisor() {
     } catch (err) {
       console.log("Failed to load chat", err);
     }
+  };
+
+  const startNewChat = () => {
+    setChat([BOT_WELCOME_MESSAGE]);
+    setChatId(null);
+    setMessage("");
   };
 
 const saveChatToDB = async (messages) => {
@@ -279,9 +306,17 @@ const handleSend = async (e) => {
   setIsTyping(true);
 
   try {
-    const res = await axios.post(`${API_BASE_URL}/chat-with-groq`, {
-      chatHistory: updatedChat,
-    });
+    const token = localStorage.getItem("token");
+    const res = await axios.post(
+      `${API_BASE_URL}/chat-with-groq`,
+      {
+        chatHistory: updatedChat,
+        quizResult: quizContext,
+      },
+      {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      }
+    );
 
     const botMessage = { sender: "bot", text: res.data.reply };
     setChat([...updatedChat, botMessage]);
@@ -312,7 +347,15 @@ const handleSend = async (e) => {
         {/* SIDEBAR */}
         <aside className="chat-history">
           <div className="history-header">
-            <h3 className="history-title">💬 Past Chats</h3>
+            <h3 className="history-title">Past Chats</h3>
+            <Button
+              variant="primary"
+              size="sm"
+              className="mt-2"
+              onClick={startNewChat}
+            >
+              + New Chat
+            </Button>
           </div>
 
           <div className="history-list">
@@ -346,7 +389,7 @@ const handleSend = async (e) => {
         <main className="ai-advisor-container">
           <h2 className="chat-title">AI Career Advisor (Nala)</h2>
           <div className="prompt-help">
-            <strong>Choice List Prompt Format</strong>
+            <strong>👋 Hello! I'm Nala, your AI Career Advisor. Ask me anything about careers in India</strong>
             To generate a college choice list, include <code>choice list</code> or <code>cutoff</code>, your cutoff value, and community code (<code>OC</code>, <code>BC</code>, <code>BCM</code>, <code>MBC</code>, <code>SC</code>, <code>SCA</code>, <code>ST</code>).
             Example: <code>Generate my choice list for cutoff 178.5 BC</code>
           </div>
@@ -394,3 +437,4 @@ const handleSend = async (e) => {
 }
 
 export default AICareerAdvisor;
+

@@ -44,3 +44,31 @@ export const updateProfile = async (req, res) => {
     res.status(500).json({ error: "Failed to update profile" });
   }
 };
+
+export const saveLatestQuizResult = async (req, res) => {
+  try {
+    const { quizResult } = req.body;
+    if (!quizResult || typeof quizResult !== "object") {
+      return res.status(400).json({ error: "quizResult is required." });
+    }
+
+    const profile = await Profile.findOneAndUpdate(
+      { user: req.user.id },
+      {
+        $set: {
+          latestQuizResult: quizResult,
+          latestQuizUpdatedAt: new Date(),
+        },
+      },
+      { new: true, upsert: true, setDefaultsOnInsert: true }
+    );
+
+    return res.json({
+      message: "Latest quiz result saved.",
+      latestQuizUpdatedAt: profile.latestQuizUpdatedAt,
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Failed to save latest quiz result" });
+  }
+};

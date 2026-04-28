@@ -1,8 +1,10 @@
 import { useState } from "react";
+import axios from "axios";
 import { Button, Modal, ProgressBar, Card, Row, Col, Badge, ListGroup } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import "../components/styles/QuizStyles.css";
+import { API_BASE_URL } from "../config/api";
 
 export default function CareerQuiz11th12th() {
   const navigate = useNavigate();
@@ -260,8 +262,36 @@ export default function CareerQuiz11th12th() {
     setAnswers([]);
   };
 
-  const handleAIClick = () => {
-    navigate('/ai-career-advisor');
+  const handleAIClick = async () => {
+    const quizPayload = {
+      quizType: "career_quiz_11th_12th",
+      completedAt: new Date().toISOString(),
+      summary: {
+        stream: currentStream,
+        recommendedCareer: result.career,
+        matchPercentage: result.matchPercentage,
+        opportunities: result.details?.opportunities || [],
+        courses: result.details?.courses || [],
+      },
+      details: result.details || null,
+      totalQuestions: currentStream ? streamQuestions[currentStream].length : 0,
+      answers,
+    };
+
+    localStorage.setItem("latestQuizResult", JSON.stringify(quizPayload));
+    try {
+      const token = localStorage.getItem("token");
+      if (token) {
+        await axios.post(
+          `${API_BASE_URL}/api/profile/quiz-result`,
+          { quizResult: quizPayload },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      }
+    } catch (error) {
+      console.error("Failed to save quiz result to DB", error);
+    }
+    navigate("/ai-career-advisor", { state: { quizResult: quizPayload } });
   };
 
   const progress = currentStream 

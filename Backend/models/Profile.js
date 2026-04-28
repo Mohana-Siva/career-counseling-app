@@ -13,6 +13,14 @@ const profileSchema = new mongoose.Schema(
     dob: { type: String, default: "" },
     careerInterest: { type: String, default: "" },
     skills: { type: String, default: "" },
+    latestQuizResult: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
+    },
+    latestQuizUpdatedAt: {
+      type: Date,
+      default: null,
+    },
 
     clg_id: {
       type: mongoose.Schema.Types.ObjectId,
