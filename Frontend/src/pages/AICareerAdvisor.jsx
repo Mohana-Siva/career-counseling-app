@@ -7,12 +7,14 @@ import { API_BASE_URL } from "../config/api";
 
 const AdvisorStyles = () => (
   <style>{`
+    @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap');
+
     .ai-page-layout {
       display: flex;
       height: 95vh;
       width: 100%;
       background-color: #f0f2f5;
-      font-family: 'Inter', sans-serif;
+      font-family: 'Manrope', sans-serif;
     }
 
     .chat-history {
@@ -107,21 +109,24 @@ const AdvisorStyles = () => (
     }
 
     .chat-message {
-      padding: 12px 18px;
-      border-radius: 18px;
+      padding: 14px 18px;
+      border-radius: 16px;
       max-width: 75%;
-      line-height: 1.5;
+      line-height: 1.7;
+      font-size: 0.98rem;
+      letter-spacing: 0.01em;
     }
 
     .bot-msg {
-      background-color: #e5e7eb;
-      color: #1f2937;
+      background-color: #f3f4f6;
+      color: #111827;
       align-self: flex-start;
       border-bottom-left-radius: 4px;
+      border: 1px solid #e5e7eb;
     }
 
     .user-msg {
-      background-color: #007bff;
+      background-color: #1d4ed8;
       color: #ffffff;
       align-self: flex-end;
       border-bottom-right-radius: 4px;
@@ -167,8 +172,38 @@ const AdvisorStyles = () => (
     .send-btn {
       border-radius: 10px;
     }
+
+    .fallback-actions {
+      display: flex;
+      gap: 10px;
+      align-self: flex-start;
+      margin-top: 4px;
+    }
     
     /* Styles for markdown rendering */
+    .bot-msg p,
+    .user-msg p {
+      margin: 0 0 0.65rem 0;
+    }
+    .bot-msg p:last-child,
+    .user-msg p:last-child {
+      margin-bottom: 0;
+    }
+    .bot-msg ul,
+    .bot-msg ol {
+      margin: 0.4rem 0 0.7rem 1.1rem;
+      padding: 0;
+    }
+    .bot-msg li {
+      margin: 0.2rem 0;
+    }
+    .bot-msg h1,
+    .bot-msg h2,
+    .bot-msg h3 {
+      font-family: 'Source Serif 4', serif;
+      margin: 0.2rem 0 0.6rem;
+      line-height: 1.35;
+    }
     .bot-msg pre {
         background-color: #1e1e1e;
         color: #d4d4d4;
@@ -217,6 +252,7 @@ function AICareerAdvisor() {
   const [isTyping, setIsTyping] = useState(false);
   const [history, setHistory] = useState([]);
   const [quizContext, setQuizContext] = useState(initialQuizContext);
+  const [pendingFallbackQuery, setPendingFallbackQuery] = useState(null);
 
   const chatEndRef = useRef(null);
   const scrollToBottom = () => {
@@ -304,6 +340,7 @@ const handleSend = async (e) => {
   setChat(updatedChat);
   setMessage("");
   setIsTyping(true);
+  setPendingFallbackQuery(null);
 
   try {
     const token = localStorage.getItem("token");
@@ -321,12 +358,64 @@ const handleSend = async (e) => {
     const botMessage = { sender: "bot", text: res.data.reply };
     setChat([...updatedChat, botMessage]);
 
+    const replyText = String(res.data?.reply || "");
+    const isFallbackReply =
+      res.data?.requiresFallbackChoice ||
+      replyText.toLowerCase().includes("i dont have any verified info on this") ||
+      replyText.toLowerCase().includes("no verified data available");
+
+    if (isFallbackReply) {
+      setPendingFallbackQuery(res.data?.originalQuery || userMessage.text);
+    }
+
   } catch (error) {
     console.error("AI error:", error);
 
     setChat([
       ...updatedChat,
       { sender: "bot", text: "⚠️ Error occurred. Try again." },
+    ]);
+  } finally {
+    setIsTyping(false);
+  }
+};
+
+const handleFallbackChoice = async (allowGeneralAnswer) => {
+  if (!pendingFallbackQuery) return;
+
+  if (!allowGeneralAnswer) {
+    setPendingFallbackQuery(null);
+    return;
+  }
+
+  setIsTyping(true);
+  const baseChat = [...chat];
+  const thinkingMessage = { sender: "bot", text: "Okay, answering based on general knowledge." };
+  setChat([...baseChat, thinkingMessage]);
+  setPendingFallbackQuery(null);
+
+  try {
+    const token = localStorage.getItem("token");
+    const res = await axios.post(
+      `${API_BASE_URL}/chat-with-groq`,
+      {
+        chatHistory: baseChat,
+        quizResult: quizContext,
+        forceDirectLLM: true,
+        directQuery: pendingFallbackQuery
+      },
+      {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      }
+    );
+
+    const botMessage = { sender: "bot", text: res.data.reply };
+    setChat([...baseChat, botMessage]);
+  } catch (error) {
+    console.error("AI fallback error:", error);
+    setChat([
+      ...baseChat,
+      { sender: "bot", text: "Error occurred while generating fallback answer. Please try again." },
     ]);
   } finally {
     setIsTyping(false);
@@ -411,6 +500,25 @@ const handleSend = async (e) => {
                 <div className="typing-dot"></div>
                 <div className="typing-dot"></div>
                 <div className="typing-dot"></div>
+              </div>
+            )}
+
+            {!isTyping && pendingFallbackQuery && (
+              <div className="fallback-actions">
+                <Button
+                  variant="success"
+                  size="sm"
+                  onClick={() => handleFallbackChoice(true)}
+                >
+                  Yes
+                </Button>
+                <Button
+                  variant="outline-secondary"
+                  size="sm"
+                  onClick={() => handleFallbackChoice(false)}
+                >
+                  No
+                </Button>
               </div>
             )}
             <div ref={chatEndRef} />

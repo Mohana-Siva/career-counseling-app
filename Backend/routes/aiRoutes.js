@@ -1,6 +1,8 @@
 import express from "express";
 import dotenv from 'dotenv';
 import Groq from 'groq-sdk';
+import { Pinecone } from '@pinecone-database/pinecone';
+import { NomicEmbeddings } from '@langchain/nomic';
 import College from '../models/College.js';
 import Profile from "../models/Profile.js";
 import protect from "../middleware/authMiddleware.js";
@@ -11,17 +13,27 @@ const router = express.Router();
 // --- Initialize All Services ---
 // We only need Groq for the AI and College for the database.
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+const pinecone = new Pinecone({ apiKey: process.env.PINECONE_API_KEY });
+const pineconeIndex = pinecone.Index('career-guide-data');
+const pineconeNamespace = 'career-guidance-docs';
+const nomicEmbeddings = new NomicEmbeddings({
+  apiKey: process.env.NOMIC_API_KEY,
+  model: 'nomic-embed-text-v1.5',
+  taskType: 'search_query',
+  task_type: 'search_query'
+});
 
 // --- Main AI Router ---
 router.post("/", protect, async (req, res) => {
   try {
-    const { chatHistory, quizResult } = req.body;
+    const { chatHistory, quizResult, forceDirectLLM = false, directQuery = "" } = req.body;
     if (!Array.isArray(chatHistory) || chatHistory.length === 0) {
       return res.status(400).json({ error: "chatHistory is required." });
     }
 
-    const userQuery = chatHistory[chatHistory.length - 1].text.toLowerCase();
-    const fullQuery = chatHistory[chatHistory.length - 1].text; // Keep original case for the AI
+    const latestChatText = chatHistory[chatHistory.length - 1].text || "";
+    const fullQuery = forceDirectLLM && directQuery ? directQuery : latestChatText;
+    const userQuery = String(fullQuery).toLowerCase();
     const profile = await Profile.findOne({ user: req.user.id }).select(
       "latestQuizResult latestQuizUpdatedAt"
     );
@@ -51,7 +63,7 @@ router.post("/", protect, async (req, res) => {
     const communityMatch = userQuery.match(/\b(oc|bc|bcm|mbc|sc|sca|st)\b/);
     const userCommunity = communityMatch ? communityMatch[0].toUpperCase() : 'OC';
 
-    if (isCutoffQuery && numberMatch) {
+    if (!forceDirectLLM && isCutoffQuery && numberMatch) {
       // --- THIS ENTIRE SECTION FOR MONGODB REMAINS THE SAME ---
       const userCutoff = parseFloat(numberMatch[0]);
       console.log(`✅ Intent: Cutoff Query. Cutoff: ${userCutoff}, Community: ${userCommunity}.`);
@@ -106,20 +118,80 @@ If no quiz context is provided, ask one brief clarifying question before recomme
       return res.json({ reply: chatCompletion.choices[0]?.message?.content || '' });
 
     } else {
-      // --- FALLBACK TO GENERAL KNOWLEDGE (NO PINECONE/NOMIC) ---
-      console.log("Fallback: General Query. Using Groq's general knowledge.");
-
-      // This system prompt gives the AI its persona without any external context.
-      const systemPrompt = `You are Nala, a helpful and friendly AI Career Advisor for students in India.
+      if (forceDirectLLM) {
+        const systemPrompt = `You are Nala, a helpful and friendly AI Career Advisor for students in India.
 Use the quiz result context to personalize advice, course suggestions, and next steps.
 When referencing quiz context, mention why recommendations match the user's profile.
 If quiz context exists, do not ask the user again to choose interests/stream unless they ask to retake.
 Answer clearly and concisely. Format your answers with Markdown for readability.
-If quiz context is missing, ask a single clarifying question before recommending careers.`;
+Start with: "This is based on my general knowledge, not verified documents."`;
+
+        const messages = [{ role: "system", content: systemPrompt }];
+        if (quizContextMessage) messages.push(quizContextMessage);
+        messages.push({ role: "user", content: fullQuery });
+
+        const chatCompletion = await groq.chat.completions.create({
+          messages,
+          model: 'llama-3.1-8b-instant',
+        });
+
+        return res.json({ reply: chatCompletion.choices[0]?.message?.content || '' });
+      }
+
+      // --- VERIFIED KNOWLEDGE RETRIEVAL (PINECONE + NOMIC) ---
+      console.log("General Query: Retrieving verified context from Pinecone.");
+
+      const queryVector = await nomicEmbeddings.embedQuery(fullQuery);
+      if (!Array.isArray(queryVector) || queryVector.length !== 768) {
+        throw new Error(
+          `Expected 768-d query embedding, got ${Array.isArray(queryVector) ? queryVector.length : 'invalid'}.`
+        );
+      }
+
+      const retrieval = await pineconeIndex.namespace(pineconeNamespace).query({
+        topK: 5,
+        vector: queryVector,
+        includeMetadata: true
+      });
+
+      const matches = Array.isArray(retrieval?.matches) ? retrieval.matches : [];
+      if (matches.length === 0) {
+        return res.json({
+          reply:
+            "I dont have any verified info on this, but if you want I can answer based on what I know.",
+          requiresFallbackChoice: true,
+          originalQuery: fullQuery
+        });
+      }
+
+      const verifiedContext = matches
+        .map((m) => (m?.metadata?.text || "").trim())
+        .filter(Boolean)
+        .join("\n\n");
+
+      if (!verifiedContext) {
+        return res.json({
+          reply:
+            "I dont have any verified info on this, but if you want I can answer based on what I know.",
+          requiresFallbackChoice: true,
+          originalQuery: fullQuery
+        });
+      }
+
+      const systemPrompt = `You are Nala, a helpful and friendly AI Career Advisor for students in India.
+Use ONLY the verified context provided to answer factual questions.
+If the verified context is not sufficient for a reliable answer, reply exactly: "No verified data available."
+Use the quiz result context to personalize advice, course suggestions, and next steps.
+When referencing quiz context, mention why recommendations match the user's profile.
+If quiz context exists, do not ask the user again to choose interests/stream unless they ask to retake.
+Answer clearly and concisely. Format your answers with Markdown for readability.`;
 
       const messages = [{ role: "system", content: systemPrompt }];
       if (quizContextMessage) messages.push(quizContextMessage);
-      messages.push({ role: "user", content: fullQuery });
+      messages.push({
+        role: "user",
+        content: `Verified context:\n${verifiedContext}\n\nUser question:\n${fullQuery}\n\nDo not mention sources or document names in the final response.`
+      });
 
       const chatCompletion = await groq.chat.completions.create({
         messages,
